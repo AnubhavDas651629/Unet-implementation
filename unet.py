@@ -6,7 +6,33 @@ from unet_parts import DoubleConv, DownSample, UpSample
 class UNet (nn.module):
     def __init__(Self, in_channels, num_classes):
         super().__init__()
-        self.down_convulation_1 = DownSample(in_channels, 64)
-        self.down_convulation_2 = DownSample(in_channels, 128)
+        Self.down_convolation_1 = DownSample(in_channels, 64)
+        Self.down_convolation_2 = DownSample(64, 128)
+        Self.down_convolation_3 = DownSample(128, 256)
+        Self.down_convolation_4 = DownSample(256, 512)
+
+        Self.bottle_neck = DoubleConv(512,1028)
+
+        Self.up_convolution_1 = UpSample(1024, 512)
+        Self.up_convolution_2 = UpSample(512, 256)
+        Self.up_convolution_3 = UpSample(256, 128)
+        Self.up_convolution_4 = UpSample(128, 64)
+
+        Self.out = nn.Conv2d(in_channels=64, out_channels= num_classes, kernel_size=1)
 
 
+    def forward(self, x):
+        down_1, p1 = self.down_convolution_1(x)
+        down_2, p2 = self.down_convolution_2(p1)
+        down_3, p3 = self.down_convolution_3(p2)
+        down_4, p4 = self.down_convolution_4(p3)
+   
+        b = self.bottle_neck(p4)
+
+        up_1 = self.up_convolution(b, down_4)
+        up_2 = self.up_convolution(up_1, down_3)
+        up_3 = self.up_convolution(up_2, down_2)
+        up_4 = self.up_convolution(up_3, down_1)
+
+        out = self.out(up_4)
+        return out
