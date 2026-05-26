@@ -1,6 +1,3 @@
-from typing import Any
-
-
 import torch
 from torch import optim, nn
 from torch.utils.data import DataLoader, random_split
@@ -45,19 +42,31 @@ if __name__ == "__main__":
             img = img_mask[0].float().to(device)
             mask = img_mask[1].float().to(device)
 
+
+            # y pred the output(guess) the model made after the up and downsampling
             y_pred = model(img)
+
+            #clearing up the old gradient in order to avoid accumulation of errors
             optimizer.zero_grad()
 
             loss = criterion(y_pred, mask)
+
+            #outputs the raw python number out of the pytorch loss tensor
             train_running_loss += loss.item()
             
+            # starts at final loss score adn then works it way up to every single layer of UNet
             loss.backward()
             optimizer.step()
-
+        # total training loss / total number of batches processed
         train_loss = train_running_loss / (idx + 1)
 
+
+        # validation after training
+        # Dropput - no nuerons deactivated from over here now on
         model.eval()
         val_running_loss = 0
+
+        #not changing any weigths hence no grad(this is the final model)
         with torch.no_grad():
             for idx, img_mask in enumerate(tqdm(val_dataloader)):
                 img = img_mask[0].float().to(device)
@@ -75,4 +84,7 @@ if __name__ == "__main__":
         print(f"Valid Loss EPOCH {epoch+1}: {val_loss:.4f}")
         print("-"*30)
 
+
+    # model.dict -> instead of extracting every single code, this creates a python dictionary that pairs every layer name with its final, calibrated weight tensor matrix
+    # torch.save will save this into the model_save_path in the gdrive can extract it over in the inference 
     torch.save(model.state_dict(), MODEL_SAVE_PATH)
