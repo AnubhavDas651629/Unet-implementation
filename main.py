@@ -13,6 +13,7 @@ def kl_divergence(pred_probs, target, eps=1e-8):
     pred_probs = pred_probs.clamp(eps, 1.0 - eps)
     kl_pos = target * (target.log() - pred_probs.log())
     kl_neg = (1.0 - target) * ((1.0 - target).log() - (1.0 - pred_probs).log())
+    kl = kl_pos + kl_neg
     return kl.mean()
 
 
