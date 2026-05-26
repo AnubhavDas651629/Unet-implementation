@@ -27,6 +27,8 @@ class DownSample(nn.Module):
 
         return down, p
 
+        # p goes deeper into the network and down is stored for future skip connections
+
 
 class UpSample(nn.Module):
     def __init__(self, in_channels, out_channels):
