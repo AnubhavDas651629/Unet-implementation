@@ -11,8 +11,11 @@ class NOAATornadoDataset(Dataset):
         folder_prefix = "manual_test" if test else "train"
         ids = sorted(os.listdir(os.path.join(root_path, folder_prefix, "cape")))
         self.cape_paths = [os.path.join(root_path, folder_prefix, "cape", i) for i in ids]
-        # same ids for cin, geo, tornado, sigtor
-        assert len(self.cape_paths) == len(self.cin_paths) == len(self.geo_paths) == ...
+        self.cin_paths = [os.path.join(root_path, folder_prefix, "cin", i) for i in ids]
+        self.geo_paths = [os.path.join(root_path, folder_prefix, "geo", i) for i in ids]
+        self.tor_paths = [os.path.join(root_path, f"{folder_prefix}_masks", "tornado", i) for i in ids]
+        self.sigtor_paths = [os.path.join(root_path, f"{folder_prefix}_masks", "sigtor", i) for i in ids]
+        assert len(self.cape_paths) == len(self.cin_paths) == len(self.geo_paths) == len(self.tor_paths) == len(self.sigtor_paths)
 
     def __getitem__(self, index):
         
