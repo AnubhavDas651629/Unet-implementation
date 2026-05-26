@@ -9,13 +9,10 @@ class NOAATornadoDataset(Dataset):
     def __init__(self, root_path, test = False):
         self.root_path = root_path
         folder_prefix = "manual_test" if test else "train"
-        self.cape_paths = sorted([os.path.join(root_path, folder_prefix, "cape", i) for i in os.listdir(os.path.join(root_path, folder_prefix, "cape"))])
-        self.cin_paths = sorted([os.path.join(root_path, folder_prefix, "cin", i) for i in os.listdir(os.path.join(root_path, folder_prefix, "cin"))])
-        self.geo_paths = sorted([os.path.join(root_path, folder_prefix, "geo", i) for i in os.listdir(os.path.join(root_path, folder_prefix, "geo"))])
-
-        self.tor_paths = sorted([os.path.join(root_path, f"{folder_prefix}_masks", "tornado", i) for i in os.listdir(os.path.join(root_path, f"{folder_prefix}_masks", "tornado"))])
-        self.sigtor_paths = sorted([os.path.join(root_path, f"{folder_prefix}_masks", "sigtor", i) for i in os.listdir(os.path.join(root_path, f"{folder_prefix}_masks", "sigtor"))])
-       
+        ids = sorted(os.listdir(os.path.join(root_path, folder_prefix, "cape")))
+        self.cape_paths = [os.path.join(root_path, folder_prefix, "cape", i) for i in ids]
+        # same ids for cin, geo, tornado, sigtor
+        assert len(self.cape_paths) == len(self.cin_paths) == len(self.geo_paths) == ...
 
     def __getitem__(self, index):
         
@@ -29,11 +26,10 @@ class NOAATornadoDataset(Dataset):
         x = torch.from_numpy(np.stack([cape, cin, geo], axis = 0)).float()
         y = torch.from_numpy(np.stack([tor_prob, sigtor_prob], axis = 0)).float()
 
-        x = x / (torch.max(torch.abs(x))+1e-8)
+        x = x / (x.abs().amax(dim=(1, 2), keepdim=True) + 1e-8)  # per channel
 
         x = TF.resize(x, [256, 256], antialias=True)
-        y = TF.resize(y, [256, 256], antialias=True)
-
+        y = TF.resize(y, [256, 256], interpolation=TF.InterpolationMode.NEAREST)       
         return x , y
 
     def __len__(self):
