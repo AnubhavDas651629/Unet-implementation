@@ -1,28 +1,40 @@
 import os
-from PIL import Image
+import torch
+import numpy as np
 from torch.utils.data.dataset import Dataset
 from torchvision import transforms
+import torchvision.transforms.functional as TF
 
-class CarvanaDataset(Dataset):
+class NOAATornadoDataset(Dataset):
     def __init__(self, root_path, test = False):
         self.root_path = root_path
-        if test:
-            self.images = sorted([root_path+"/manual_test/"+i for i in os.listdir(root_path+"/manual_test/")])
-            self.masks = sorted([root_path+"/manual_test_masks/"+i for i in os.listdir(root_path+"/manual_test_masks/")])
-        else:
-            self.images = sorted([root_path+"/train/"+i for i in os.listdir(root_path+"/train/")])
-            self.masks = sorted([root_path+"/train_masks/"+i for i in os.listdir(root_path+"/train_masks/")])
+        folder_prefix = "manual_test" if test else "train"
+        self.cape_paths = sorted([os.path.join(root_path, folder_prefix, "cape", i) for i in os.listdir(os.path.join(root_path, folder_prefix, "cape"))])
+        self.cin_paths = sorted([os.path.join(root_path, folder_prefix, "cin", i) for i in os.listdir(os.path.join(root_path, folder_prefix, "cin"))])
+        self.geo_paths = sorted([os.path.join(root_path, folder_prefix, "geo", i) for i in os.listdir(os.path.join(root_path, folder_prefix, "geo"))])
 
-        self.transform = transforms.Compose([
-            transforms.Resize((512,512)),
-            transforms.ToTensor()
-        ])
+        self.tor_paths = sorted([os.path.join(root_path, f"{folder_prefix}_masks", "tornado", i) for i in os.listdir(os.path.join(root_path, f"{folder_prefix}_masks", "tornado"))])
+        self.sigtor_paths = sorted([os.path.join(root_path, f"{folder_prefix}_masks", "sigtor", i) for i in os.listdir(os.path.join(root_path, f"{folder_prefix}_masks", "sigtor"))])
+       
 
     def __getitem__(self, index):
-        img = Image.open(self.images[index]).convert("RGB")
-        mask = Image.open(self.masks[index]).convert("L")
+        
+        cape = np.load(self.cape_paths[index])
+        cin = np.load(self.cin_paths[index])
+        geo = np.load(self.geo_paths[index])
 
-        return self.transform(img), self.transform(mask)
+        tor_prob = np.load(self.tor_paths[index])
+        sigtor_prob = np.load(self.sigtor_paths[index])
+
+        x = torch.from_numpy(np.stack([cape, cin, geo], axis = 0)).float()
+        y = torch.from_numpy(np.stack([tor_prob, sigtor_prob], axis = 0)).float()
+
+        x = x / (torch.max(torch.abs(x))+1e-8)
+
+        x = TF.resize(x, [256, 256], antialias=True)
+        y = TF.resize(y, [256, 256], antialias=True)
+
+        return x , y
 
     def __len__(self):
-        return len(self.images)
+        return len(self.cape_paths)
