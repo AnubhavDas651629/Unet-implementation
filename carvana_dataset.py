@@ -2,7 +2,6 @@ import os
 import torch
 import numpy as np
 from torch.utils.data.dataset import Dataset
-from torchvision import transforms
 import torchvision.transforms.functional as TF
 
 class NOAATornadoDataset(Dataset):
