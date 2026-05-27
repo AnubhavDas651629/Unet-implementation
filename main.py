@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader, random_split
 from tqdm import tqdm
 
 from unet import UNet
-from carvana_dataset import NOAATornadoDataset
+from NOAA_dataset import NOAATornadoDataset
 
 
 def kl_divergence(pred_probs, target, eps=1e-8):
@@ -21,7 +21,7 @@ if __name__ == "__main__":
     LEARNING_RATE = 1e-4
     BATCH_SIZE = 64
     EPOCHS = 10
-    DATA_PATH = "./data"  # update to your local or Colab path
+    DATA_PATH = "/Users/parthapratimdas/Desktop/data"  # update to your local or Colab path
     MODEL_SAVE_PATH = "./models/unet.pth"
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
